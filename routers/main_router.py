@@ -129,7 +129,7 @@ async def create_report(
         if extra:
             full_prompt += f"\n\n[추가 지시사항]\n{extra}"
 
-    result = await generate_report(full_prompt)
+    result = await generate_report(full_prompt, api_key=request.session.get("claude_api_key"))
 
     report = models.Report(
         client_id=client_id,
@@ -204,6 +204,25 @@ def reject_report(
         report.reject_reason = reject_reason
         db.commit()
     return RedirectResponse(f"/report/{report_id}", status_code=302)
+
+
+# ── Claude API 키 설정 ────────────────────────────────────
+@router.post("/settings/api-key")
+async def save_api_key(request: Request, api_key: str = Form(...)):
+    if not require_login(request):
+        return RedirectResponse("/login")
+    stripped = api_key.strip()
+    if stripped:
+        request.session["claude_api_key"] = stripped
+    return RedirectResponse("/dashboard", status_code=302)
+
+
+@router.post("/settings/api-key/remove")
+async def remove_api_key(request: Request):
+    if not require_login(request):
+        return RedirectResponse("/login")
+    request.session.pop("claude_api_key", None)
+    return RedirectResponse("/dashboard", status_code=302)
 
 
 # ── 고객 등록 ─────────────────────────────────────────────

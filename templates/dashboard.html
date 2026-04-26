@@ -8,13 +8,13 @@
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
     <h2>통합관리자 대시보드</h2>
-    <a href="/admin/new" class="btn btn-primary">+ 관리자 추가</a>
+    <a href="/admin/new" class="btn btn-primary">+ 담당자 추가</a>
 </div>
 
 <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
     <div class="card" style="text-align:center;">
         <div style="font-size:32px; font-weight:bold; color:#7c3aed;">{{ admins|length }}</div>
-        <div style="color:#6b7280; font-size:14px; margin-top:4px;">관리자 수</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">담당자 수</div>
     </div>
     <div class="card" style="text-align:center;">
         <div style="font-size:32px; font-weight:bold; color:#374151;">{{ reports|length }}</div>
@@ -82,7 +82,7 @@
     {% endif %}
 </div>
 
-<!-- ── 관리자 대시보드 ── -->
+<!-- ── 담당자 대시보드 ── -->
 {% else %}
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">

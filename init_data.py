@@ -14,8 +14,8 @@ if not db.query(models.User).filter(models.User.username == "superadmin").first(
 
 if not db.query(models.User).filter(models.User.username == "admin").first():
     pw = bcrypt.hashpw("admin1234".encode(), bcrypt.gensalt()).decode()
-    db.add(models.User(username="admin", password_hash=pw, name="관리자1", role="admin"))
+    db.add(models.User(username="admin", password_hash=pw, name="담당자1", role="admin"))
     db.commit()
-    print("관리자 생성: admin / admin1234")
+    print("담당자 생성: admin / admin1234")
 
 db.close()

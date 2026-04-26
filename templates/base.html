@@ -96,14 +96,14 @@
         <a href="/report/new">리포트 생성</a>
         <a href="/client/new">고객 등록</a>
         {% else %}
-        <a href="/admin/new">관리자 추가</a>
+        <a href="/admin/new">담당자 추가</a>
         {% endif %}
         <a href="/logout">
             {{ request.session.get("name") }}
             {% if request.session.get("role") == "superadmin" %}
             <span class="role-badge role-superadmin">통합관리자</span>
             {% else %}
-            <span class="role-badge role-admin">관리자</span>
+            <span class="role-badge role-admin">담당자</span>
             {% endif %}
             · 로그아웃
         </a>

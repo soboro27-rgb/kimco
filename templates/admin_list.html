@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>담당자 목록</h2>
+    <button onclick="toggleForm()" id="toggleBtn" class="btn btn-primary">+ 담당자 추가</button>
+</div>
+
+<!-- 담당자 추가 폼 -->
+<div id="addForm" style="display:none; margin-bottom:20px;">
+    <div class="card" style="border-top:3px solid #7c3aed;">
+        <h2 style="margin-bottom:20px;">신규 담당자 등록</h2>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="post" action="/admin/new">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+                <div>
+                    <label>이름</label>
+                    <input type="text" name="name" placeholder="홍길동" required>
+                </div>
+                <div>
+                    <label>아이디</label>
+                    <input type="text" name="username" placeholder="로그인 아이디" required>
+                </div>
+                <div>
+                    <label>비밀번호</label>
+                    <input type="password" name="password" placeholder="비밀번호" required>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:4px;">
+                <button type="submit" class="btn btn-primary" style="padding:10px 28px;">등록</button>
+                <button type="button" onclick="toggleForm()" class="btn btn-secondary" style="padding:10px 20px;">취소</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 담당자 테이블 -->
+<div class="card">
+    {% if admins %}
+    <table>
+        <thead>
+            <tr>
+                <th>이름</th>
+                <th>아이디</th>
+                <th style="text-align:center;">고객 수</th>
+                <th style="text-align:center;">리포트 수</th>
+                <th>등록일</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for admin in admins %}
+        <tr>
+            <td style="font-weight:600;">{{ admin.name }}</td>
+            <td style="color:#6b7280;">{{ admin.username }}</td>
+            <td style="text-align:center;">
+                <span style="background:#ede9fe; color:#6d28d9; padding:3px 10px; border-radius:12px; font-size:13px; font-weight:600;">
+                    {{ admin.clients|length }}
+                </span>
+            </td>
+            <td style="text-align:center;">
+                <span style="background:#f3f4f6; color:#374151; padding:3px 10px; border-radius:12px; font-size:13px; font-weight:600;">
+                    {{ admin.reports|length }}
+                </span>
+            </td>
+            <td style="font-size:13px; color:#6b7280;">{{ admin.created_at.strftime('%Y-%m-%d') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center; padding:48px; color:#9ca3af;">
+        등록된 담당자가 없습니다.<br>
+        <button onclick="toggleForm()" class="btn btn-primary" style="margin-top:16px;">첫 담당자 추가하기</button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleForm() {
+    var form = document.getElementById('addForm');
+    var btn = document.getElementById('toggleBtn');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        btn.textContent = '✕ 닫기';
+    } else {
+        form.style.display = 'none';
+        btn.textContent = '+ 담당자 추가';
+    }
+}
+{% if error %}
+document.addEventListener('DOMContentLoaded', function() { toggleForm(); });
+{% endif %}
+</script>
+{% endblock %}

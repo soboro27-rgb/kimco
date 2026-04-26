@@ -253,14 +253,16 @@ def create_client(
     return RedirectResponse("/dashboard", status_code=302)
 
 
-# ── 관리자 계정 생성 (통합관리자 전용) ───────────────────
-@router.get("/admin/new", response_class=HTMLResponse)
-def new_admin_page(request: Request):
+# ── 담당자 목록 (통합관리자 전용) ────────────────────────
+@router.get("/admins", response_class=HTMLResponse)
+def admin_list(request: Request, db: Session = Depends(get_db)):
     if not is_superadmin(request):
         return RedirectResponse("/dashboard")
-    return templates.TemplateResponse("new_admin.html", {"request": request})
+    admins = db.query(models.User).filter(models.User.role == "admin").order_by(models.User.created_at.desc()).all()
+    return templates.TemplateResponse("admin_list.html", {"request": request, "admins": admins})
 
 
+# ── 담당자 계정 생성 (통합관리자 전용) ───────────────────
 @router.post("/admin/new")
 def create_admin(
     request: Request,
@@ -272,9 +274,10 @@ def create_admin(
     if not is_superadmin(request):
         return RedirectResponse("/dashboard")
     import bcrypt
+    admins = db.query(models.User).filter(models.User.role == "admin").order_by(models.User.created_at.desc()).all()
     if db.query(models.User).filter(models.User.username == username).first():
-        return templates.TemplateResponse("new_admin.html", {"request": request, "error": "이미 존재하는 아이디입니다."})
+        return templates.TemplateResponse("admin_list.html", {"request": request, "admins": admins, "error": "이미 존재하는 아이디입니다."})
     pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     db.add(models.User(username=username, password_hash=pw, name=name, role="admin"))
     db.commit()
-    return RedirectResponse("/dashboard", status_code=302)
+    return RedirectResponse("/admins", status_code=302)

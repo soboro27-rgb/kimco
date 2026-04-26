@@ -96,7 +96,7 @@
         <a href="/report/new">리포트 생성</a>
         <a href="/client/new">고객 등록</a>
         {% else %}
-        <a href="/admin/new">담당자 추가</a>
+        <a href="/admins">담당자 목록</a>
         {% endif %}
         <a href="/logout">
             {{ request.session.get("name") }}

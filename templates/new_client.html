@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>고객 등록</h2>
+<div class="card" style="max-width:600px;">
+    <form method="post" action="/client/new">
+        <label>고객명</label>
+        <input type="text" name="name" placeholder="홍길동" required>
+
+        <label>이메일</label>
+        <input type="email" name="email" placeholder="example@email.com" required>
+
+        <label>회사명</label>
+        <input type="text" name="company" placeholder="ABC Corp." required>
+
+        <label>메모 (선택)</label>
+        <textarea name="memo" placeholder="고객 특이사항, 업종, 주요 이슈 등"></textarea>
+
+        <div style="display:flex; gap:10px;">
+            <button type="submit" class="btn btn-primary" style="flex:1; padding:12px;">등록</button>
+            <a href="/dashboard" class="btn btn-secondary" style="padding:12px 20px;">취소</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

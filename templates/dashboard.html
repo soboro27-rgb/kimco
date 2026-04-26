@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set role = request.session.get("role") %}
+
+<!-- ── 통합관리자 대시보드 ── -->
+{% if role == "superadmin" %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>통합관리자 대시보드</h2>
+    <a href="/admin/new" class="btn btn-primary">+ 관리자 추가</a>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="card" style="text-align:center;">
+        <div style="font-size:32px; font-weight:bold; color:#7c3aed;">{{ admins|length }}</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">관리자 수</div>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:32px; font-weight:bold; color:#374151;">{{ reports|length }}</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">전체 리포트</div>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:32px; font-weight:bold; color:#f59e0b;">{{ pending|length }}</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">승인 대기</div>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:32px; font-weight:bold; color:#059669;">{{ reports|selectattr('status','eq','approved')|list|length }}</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">승인 완료</div>
+    </div>
+</div>
+
+{% if pending %}
+<div class="card" style="border-left:4px solid #f59e0b;">
+    <h2 style="color:#92400e;">⏳ 승인 대기 리포트 ({{ pending|length }}건)</h2>
+    <table>
+        <thead>
+            <tr><th>고객</th><th>유형</th><th>담당자</th><th>생성일</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for report in pending %}
+        <tr>
+            <td>{{ report.client.name }} ({{ report.client.company }})</td>
+            <td>{{ prompts[report.report_type]['label'] }}</td>
+            <td>{{ report.user.name }}</td>
+            <td style="font-size:13px; color:#6b7280;">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td><a href="/report/{{ report.id }}" class="btn btn-warning" style="font-size:12px; padding:5px 12px;">검토</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>전체 리포트</h2>
+    {% if reports %}
+    <table>
+        <thead>
+            <tr><th>고객</th><th>유형</th><th>담당자</th><th>상태</th><th>생성일</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for report in reports %}
+        <tr>
+            <td>{{ report.client.name }} ({{ report.client.company }})</td>
+            <td>{{ prompts[report.report_type]['label'] }}</td>
+            <td>{{ report.user.name }}</td>
+            <td>
+                {% if report.status == 'draft' %}<span class="badge badge-draft">초안</span>
+                {% elif report.status == 'submitted' %}<span class="badge badge-submitted">승인대기</span>
+                {% elif report.status == 'approved' %}<span class="badge badge-approved">승인완료</span>
+                {% elif report.status == 'rejected' %}<span class="badge badge-rejected">반려</span>{% endif %}
+            </td>
+            <td style="font-size:13px; color:#6b7280;">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td><a href="/report/{{ report.id }}" class="btn btn-secondary" style="font-size:12px; padding:5px 12px;">보기</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center; padding:40px; color:#9ca3af;">아직 리포트가 없습니다.</div>
+    {% endif %}
+</div>
+
+<!-- ── 관리자 대시보드 ── -->
+{% else %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>내 대시보드</h2>
+    <div>
+        <a href="/client/new" class="btn btn-secondary" style="margin-right:8px;">+ 고객 등록</a>
+        <a href="/report/new" class="btn btn-primary">+ 리포트 생성</a>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="card" style="text-align:center;">
+        <div style="font-size:32px; font-weight:bold; color:#7c3aed;">{{ clients|length }}</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">내 고객</div>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:32px; font-weight:bold; color:#374151;">{{ reports|length }}</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">전체 리포트</div>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:32px; font-weight:bold; color:#f59e0b;">{{ reports|selectattr('status','eq','draft')|list|length }}</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">작성중 (초안)</div>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:32px; font-weight:bold; color:#059669;">{{ reports|selectattr('status','eq','approved')|list|length }}</div>
+        <div style="color:#6b7280; font-size:14px; margin-top:4px;">승인 완료</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>내 리포트</h2>
+    {% if reports %}
+    <table>
+        <thead>
+            <tr><th>고객</th><th>유형</th><th>상태</th><th>생성일</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for report in reports %}
+        <tr>
+            <td>{{ report.client.name }} ({{ report.client.company }})</td>
+            <td>{{ prompts[report.report_type]['label'] }}</td>
+            <td>
+                {% if report.status == 'draft' %}<span class="badge badge-draft">초안</span>
+                {% elif report.status == 'submitted' %}<span class="badge badge-submitted">승인대기</span>
+                {% elif report.status == 'approved' %}<span class="badge badge-approved">승인완료</span>
+                {% elif report.status == 'rejected' %}<span class="badge badge-rejected">반려</span>{% endif %}
+            </td>
+            <td style="font-size:13px; color:#6b7280;">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td><a href="/report/{{ report.id }}" class="btn btn-secondary" style="font-size:12px; padding:5px 12px;">보기</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center; padding:40px; color:#9ca3af;">
+        아직 리포트가 없습니다.<br>
+        <a href="/report/new" class="btn btn-primary" style="margin-top:12px;">첫 리포트 생성하기</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endif %}
+{% endblock %}

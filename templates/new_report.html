@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>새 리포트 생성</h2>
+<div class="card">
+    <form method="post" action="/report/new" enctype="multipart/form-data">
+        <label>고객 선택</label>
+        <select name="client_id" required>
+            <option value="">-- 고객을 선택하세요 --</option>
+            {% for client in clients %}
+            <option value="{{ client.id }}">{{ client.name }} ({{ client.company }})</option>
+            {% endfor %}
+        </select>
+
+        <label>리포트 유형</label>
+        <select name="report_type" required>
+            {% for key, val in prompts.items() %}
+            <option value="{{ key }}">{{ val.label }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Order Prompt 탭 -->
+        <div style="margin-bottom:16px;">
+            <div style="display:flex; gap:0; margin-bottom:0;">
+                <button type="button" onclick="showTab('tab-data')" id="btn-data"
+                    style="padding:9px 20px; border:1px solid #d1d5db; border-bottom:none; border-radius:6px 6px 0 0; background:#7c3aed; color:white; cursor:pointer; font-size:14px;">
+                    고객 자료 입력
+                </button>
+                <button type="button" onclick="showTab('tab-order')" id="btn-order"
+                    style="padding:9px 20px; border:1px solid #d1d5db; border-bottom:none; border-radius:6px 6px 0 0; background:#f9fafb; color:#6b7280; cursor:pointer; font-size:14px; margin-left:4px;">
+                    Order Prompt
+                </button>
+            </div>
+
+            <!-- 고객 자료 입력 탭 -->
+            <div id="tab-data" style="border:1px solid #d1d5db; border-radius:0 6px 6px 6px; padding:16px; background:white;">
+                <textarea name="input_data" placeholder="고객 자료, 상담 내용, 재무 데이터 등을 입력하세요.&#10;예) 2024년 매출 $500,000, 경비 $320,000, 직원 3명, LLC 구조..."
+                    style="width:100%; min-height:120px; border:1px solid #d1d5db; border-radius:6px; padding:10px; font-size:14px; resize:vertical; margin-bottom:12px;"></textarea>
+
+                <div style="border:2px dashed #d1d5db; border-radius:8px; padding:20px; text-align:center; background:#fafafa; cursor:pointer;"
+                    onclick="document.getElementById('file-upload').click()">
+                    <div style="font-size:28px; margin-bottom:6px;">📎</div>
+                    <div style="font-weight:600; color:#374151; margin-bottom:4px;">파일 업로드</div>
+                    <div style="font-size:13px; color:#9ca3af;">PDF, Word(.docx), TXT 파일 지원</div>
+                    <div id="file-name" style="margin-top:8px; font-size:13px; color:#7c3aed; font-weight:600;"></div>
+                </div>
+                <input type="file" id="file-upload" name="upload_file" accept=".pdf,.docx,.txt"
+                    style="display:none;" onchange="showFileName(this)">
+                <div style="font-size:12px; color:#9ca3af; margin-top:6px;">* 텍스트 직접 입력과 파일 업로드를 함께 사용할 수 있습니다.</div>
+            </div>
+
+            <!-- Order Prompt 탭 -->
+            <div id="tab-order" style="display:none; border:1px solid #d1d5db; border-radius:0 6px 6px 6px; padding:16px; background:white;">
+                <div style="font-size:13px; color:#6b7280; margin-bottom:12px;">
+                    Claude에게 전달할 추가 지시사항을 입력하세요. 줄을 추가하여 여러 항목을 작성할 수 있습니다.
+                </div>
+                <div id="prompt-lines">
+                    <div class="prompt-line" style="display:flex; gap:8px; margin-bottom:8px;">
+                        <input type="text" name="order_prompts" placeholder="예) 한국어와 영어로 병기하여 작성해주세요."
+                            style="flex:1; padding:9px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; margin-bottom:0;">
+                        <button type="button" onclick="removeLine(this)" style="padding:8px 12px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                </div>
+                <button type="button" onclick="addLine()"
+                    style="margin-top:4px; padding:8px 16px; background:#ede9fe; color:#7c3aed; border:none; border-radius:6px; cursor:pointer; font-size:14px;">
+                    + 줄 추가
+                </button>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button type="submit" class="btn btn-primary" style="flex:1; padding:12px; font-size:15px;">
+                Claude로 리포트 생성
+            </button>
+            <a href="/dashboard" class="btn btn-secondary" style="padding:12px 20px;">취소</a>
+        </div>
+        <div style="margin-top:12px; font-size:13px; color:#6b7280;">
+            * 리포트 생성에 30초~1분 정도 소요될 수 있습니다.
+        </div>
+    </form>
+</div>
+
+<script>
+function showTab(tabId) {
+    document.getElementById('tab-data').style.display = 'none';
+    document.getElementById('tab-order').style.display = 'none';
+    document.getElementById('btn-data').style.background = '#f9fafb';
+    document.getElementById('btn-data').style.color = '#6b7280';
+    document.getElementById('btn-order').style.background = '#f9fafb';
+    document.getElementById('btn-order').style.color = '#6b7280';
+
+    document.getElementById(tabId).style.display = 'block';
+    if (tabId === 'tab-data') {
+        document.getElementById('btn-data').style.background = '#7c3aed';
+        document.getElementById('btn-data').style.color = 'white';
+    } else {
+        document.getElementById('btn-order').style.background = '#7c3aed';
+        document.getElementById('btn-order').style.color = 'white';
+    }
+}
+
+function addLine() {
+    const container = document.getElementById('prompt-lines');
+    const div = document.createElement('div');
+    div.className = 'prompt-line';
+    div.style.cssText = 'display:flex; gap:8px; margin-bottom:8px;';
+    div.innerHTML = `
+        <input type="text" name="order_prompts" placeholder="추가 지시사항 입력..."
+            style="flex:1; padding:9px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; margin-bottom:0;">
+        <button type="button" onclick="removeLine(this)" style="padding:8px 12px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; cursor:pointer; font-size:16px;">✕</button>
+    `;
+    container.appendChild(div);
+}
+
+function showFileName(input) {
+    const name = input.files[0] ? input.files[0].name : '';
+    document.getElementById('file-name').textContent = name ? '✓ ' + name : '';
+}
+
+function removeLine(btn) {
+    const lines = document.querySelectorAll('.prompt-line');
+    if (lines.length > 1) {
+        btn.parentElement.remove();
+    }
+}
+</script>
+{% endblock %}

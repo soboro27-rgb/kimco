@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+{% set role = request.session.get("role") %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>리포트 상세</h2>
+    <a href="/dashboard" class="btn btn-secondary">← 목록으로</a>
+</div>
+
+<!-- 반려 사유 표시 -->
+{% if report.status == 'rejected' and report.reject_reason %}
+<div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; padding:16px; margin-bottom:20px;">
+    <div style="font-weight:bold; color:#991b1b; margin-bottom:4px;">반려 사유</div>
+    <div style="color:#7f1d1d; font-size:14px;">{{ report.reject_reason }}</div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid #e5e7eb;">
+        <div>
+            <div style="font-size:12px; color:#6b7280; margin-bottom:4px;">고객</div>
+            <div style="font-weight:600;">{{ report.client.name }}</div>
+            <div style="font-size:13px; color:#6b7280;">{{ report.client.company }}</div>
+        </div>
+        <div>
+            <div style="font-size:12px; color:#6b7280; margin-bottom:4px;">유형</div>
+            <div style="font-weight:600;">{{ prompts[report.report_type]['label'] }}</div>
+        </div>
+        <div>
+            <div style="font-size:12px; color:#6b7280; margin-bottom:4px;">담당자</div>
+            <div style="font-weight:600;">{{ report.user.name }}</div>
+        </div>
+        <div>
+            <div style="font-size:12px; color:#6b7280; margin-bottom:4px;">상태</div>
+            {% if report.status == 'draft' %}<span class="badge badge-draft">초안</span>
+            {% elif report.status == 'submitted' %}<span class="badge badge-submitted">승인대기</span>
+            {% elif report.status == 'approved' %}<span class="badge badge-approved">승인완료</span>
+            {% elif report.status == 'rejected' %}<span class="badge badge-rejected">반려</span>{% endif %}
+        </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+        <div style="font-size:13px; font-weight:600; color:#6b7280; margin-bottom:8px;">입력 자료</div>
+        <div style="background:#f9fafb; padding:14px; border-radius:6px; font-size:14px; white-space:pre-wrap;">{{ report.input_data }}</div>
+    </div>
+
+    <div style="margin-bottom:24px;">
+        <div style="font-size:13px; font-weight:600; color:#6b7280; margin-bottom:8px;">Claude 생성 리포트</div>
+        <div style="background:#faf5ff; border:1px solid #e9d5ff; padding:20px; border-radius:6px; font-size:14px; line-height:1.8; white-space:pre-wrap;">{{ report.result }}</div>
+    </div>
+
+    <!-- 관리자 버튼 -->
+    {% if role == "admin" %}
+        {% if report.status == "draft" %}
+        <div style="display:flex; gap:10px;">
+            <form method="post" action="/report/{{ report.id }}/submit">
+                <button type="submit" class="btn btn-primary">통합관리자에게 승인 요청</button>
+            </form>
+            <button onclick="window.print()" class="btn btn-secondary">인쇄 / PDF</button>
+        </div>
+        {% elif report.status == "submitted" %}
+        <div style="color:#92400e; font-size:14px; padding:12px; background:#fef3c7; border-radius:6px;">
+            ⏳ 통합관리자 승인 대기 중입니다.
+        </div>
+        {% elif report.status == "rejected" %}
+        <div style="display:flex; gap:10px;">
+            <form method="post" action="/report/{{ report.id }}/submit">
+                <button type="submit" class="btn btn-primary">수정 후 재요청</button>
+            </form>
+        </div>
+        {% elif report.status == "approved" %}
+        <button onclick="window.print()" class="btn btn-success">인쇄 / PDF</button>
+        {% endif %}
+    {% endif %}
+
+    <!-- 통합관리자 버튼 -->
+    {% if role == "superadmin" and report.status == "submitted" %}
+    <div style="display:flex; gap:10px; align-items:flex-start;">
+        <form method="post" action="/report/{{ report.id }}/approve">
+            <button type="submit" class="btn btn-success">승인</button>
+        </form>
+        <form method="post" action="/report/{{ report.id }}/reject" style="display:flex; gap:8px; align-items:center;">
+            <input type="text" name="reject_reason" placeholder="반려 사유 입력"
+                style="width:280px; padding:9px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; margin-bottom:0;">
+            <button type="submit" class="btn btn-danger">반려</button>
+        </form>
+        <button onclick="window.print()" class="btn btn-secondary">인쇄 / PDF</button>
+    </div>
+    {% elif role == "superadmin" %}
+    <button onclick="window.print()" class="btn btn-secondary">인쇄 / PDF</button>
+    {% endif %}
+</div>
+{% endblock %}
